@@ -411,16 +411,16 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
 function TitrationHero() {
   return (
     <div style={{ position: "relative", overflow: "hidden", borderRadius: 20, marginBottom: 26, background: "linear-gradient(135deg, #1B2A3D 0%, #24384f 60%, #1B2A3D 100%)" }}>
-      <div style={{ position: "relative", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24, padding: "38px 32px" }}>
+      <div style={{ position: "relative", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 20, padding: "26px 32px" }}>
         <div style={{ flex: 1, minWidth: 250 }}>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 12, padding: "5px 14px", borderRadius: 999, display: "inline-block", marginBottom: 16, background: "#F6F8F612", color: "#D9A441", letterSpacing: "0.06em" }}>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 12, padding: "5px 14px", borderRadius: 999, display: "inline-block", marginBottom: 10, background: "#F6F8F612", color: "#D9A441", letterSpacing: "0.06em" }}>
             ⚗ GUIDED CHEMISTRY PRACTICE
           </span>
-          <h1 style={{ fontFamily: "var(--display)", fontSize: "clamp(28px, 5vw, 42px)", marginBottom: 12, color: "#F6F8F6", letterSpacing: "-0.015em", lineHeight: 1.08 }}>
+          <h1 style={{ fontFamily: "var(--display)", fontSize: "clamp(28px, 5vw, 42px)", marginBottom: 8, color: "#F6F8F6", letterSpacing: "-0.015em", lineHeight: 1.06 }}>
             Master chemistry,<br />one reaction at a time.
           </h1>
-          <p style={{ fontSize: 15, maxWidth: 440, color: "#9FB2BE", lineHeight: 1.6 }}>
-            Unlimited AI-generated practice across three courses — plus a periodic table, calculator, formula sheet, and constants, all in one place.
+          <p style={{ fontSize: 14.5, maxWidth: 440, color: "#9FB2BE", lineHeight: 1.5 }}>
+            Endless practice questions across three courses, a periodic table, calculator, formula sheet, and constants — all in one place.
           </p>
         </div>
         <svg width="110" height="140" viewBox="0 0 120 150" aria-hidden="true" style={{ flexShrink: 0 }}>
