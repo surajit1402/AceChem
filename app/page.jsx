@@ -505,10 +505,19 @@ const TOOLS = [
    Replace each buyUrl with your real Gumroad / payment link.
    Set buyUrl: null to show "Coming soon". */
 const STUDY_GUIDES = [
-  { id: "g1", title: "Chem 1 Complete Study Guide", desc: "Every Chem 1 topic condensed: worked examples, common traps, and exam checklists.", price: "$9", buyUrl: null },
-  { id: "g2", title: "Chem 2 Complete Study Guide", desc: "Kinetics through nuclear — ICE tables, buffers, and electrochem made simple.", price: "$9", buyUrl: null },
-  { id: "g3", title: "Final Exam Crash Sheet Pack", desc: "Two-page rapid-review sheets per topic. Print, highlight, ace it.", price: "$5", buyUrl: null },
+  { id: "g1", title: "Stoichiometry & Limiting Reagent Guide", desc: "Mole ratios, limiting reagent, percent yield — the #1 topic students get stuck on, broken into clear steps.", price: "$6", buyUrl: null },
+  { id: "g2", title: "Gas Laws Guide", desc: "Ideal gas law, combined gas law, Dalton's and Graham's laws with worked practice problems.", price: "$6", buyUrl: null },
+  { id: "g3", title: "Chemical Bonding & Molecular Geometry Guide", desc: "Lewis structures, VSEPR shapes, polarity, and hybridization — visual step-by-step method.", price: "$6", buyUrl: null },
   { id: "g4", title: "Thermodynamics Study Guide", desc: "Enthalpy, entropy, Gibbs free energy, Hess's law, and calorimetry — worked problems and formula quick-reference.", price: "$7", buyUrl: null },
+  { id: "g5", title: "Equilibrium & ICE Tables Guide", desc: "Kc, Kp, and ICE tables demystified, plus Le Chatelier's principle shortcuts.", price: "$6", buyUrl: null },
+  { id: "g6", title: "Acids, Bases & Buffers Guide", desc: "pH/pOH, pKa, buffer calculations, and titration curves explained with practice sets.", price: "$6", buyUrl: null },
+  { id: "g7", title: "Electrochemistry & Redox Guide", desc: "Balancing redox reactions, galvanic cells, standard potentials, and the Nernst equation.", price: "$6", buyUrl: null },
+  { id: "g8", title: "Kinetics & Rate Laws Guide", desc: "Rate laws, integrated rate laws, half-life, and activation energy — Arrhenius made simple.", price: "$6", buyUrl: null },
+  { id: "g9", title: "Final Exam Crash Sheet Pack", desc: "Two-page rapid-review sheets per topic. Print, highlight, ace it.", price: "$5", buyUrl: null },
+  { id: "g10", title: "Chem 1 Midterm Practice Exam", desc: "Full-length timed practice midterm covering bonding through gases, with complete solutions.", price: "$8", buyUrl: null },
+  { id: "g11", title: "Chem 1 Final Exam Practice Set", desc: "Cumulative Chem 1 final exam simulation with answer walkthroughs for every question.", price: "$10", buyUrl: null },
+  { id: "g12", title: "Chem 2 Midterm Practice Exam", desc: "Full-length timed practice midterm covering kinetics through thermodynamics, with complete solutions.", price: "$8", buyUrl: null },
+  { id: "g13", title: "Chem 2 Final Exam Practice Set", desc: "Cumulative Chem 2 final exam simulation with answer walkthroughs for every question.", price: "$10", buyUrl: null },
 ];
 
 export default function Home() {
