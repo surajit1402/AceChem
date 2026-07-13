@@ -699,28 +699,13 @@ export default function Home() {
                 <h2 style={{ fontFamily: "var(--display)", fontSize: 25, letterSpacing: "-0.01em" }}>Go deeper with study guides</h2>
               </div>
               <p style={{ fontSize: 14, color: "#4B5F6F", marginBottom: 18, maxWidth: 560 }}>
-                Practice here is free forever. If you want structured review material, these downloadable guides support the project.
+                Practice here is free forever. Downloadable study guides are on the way.
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 16 }}>
-                {STUDY_GUIDES.map((g) => (
-                  <div key={g.id} style={{ borderRadius: 14, padding: 20, background: "#1B2A3D", color: "#F6F8F6", display: "flex", flexDirection: "column" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                      <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#D9A441", letterSpacing: "0.05em" }}>PDF DOWNLOAD</span>
-                      <span style={{ fontFamily: "var(--display)", fontSize: 18, color: "#F6F8F6" }}>{g.price}</span>
-                    </div>
-                    <h3 style={{ fontFamily: "var(--display)", fontSize: 16, marginBottom: 6 }}>{g.title}</h3>
-                    <p style={{ fontSize: 13.5, color: "#9FB2BE", lineHeight: 1.55, marginBottom: 16 }}>{g.desc}</p>
-                    {g.buyUrl ? (
-                      <a href={g.buyUrl} target="_blank" rel="noopener noreferrer" style={{ marginTop: "auto", alignSelf: "flex-start", fontFamily: "var(--mono)", fontSize: 12.5, padding: "8px 16px", borderRadius: 8, background: "#2A7F7E", color: "white", textDecoration: "none" }}>
-                        Get the guide →
-                      </a>
-                    ) : (
-                      <span style={{ marginTop: "auto", alignSelf: "flex-start", fontFamily: "var(--mono)", fontSize: 12.5, padding: "8px 16px", borderRadius: 8, background: "#F6F8F61a", color: "#9FB2BE" }}>
-                        Coming soon
-                      </span>
-                    )}
-                  </div>
-                ))}
+              <div style={{ borderRadius: 14, padding: 32, background: "#1B2A3D", color: "#F6F8F6", textAlign: "center" }}>
+                <h3 style={{ fontFamily: "var(--display)", fontSize: 18, marginBottom: 6 }}>Coming soon</h3>
+                <p style={{ fontSize: 13.5, color: "#9FB2BE", lineHeight: 1.55, maxWidth: 420, margin: "0 auto" }}>
+                  We're putting together topic guides and exam prep material. Check back soon.
+                </p>
               </div>
             </div>
 
