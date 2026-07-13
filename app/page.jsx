@@ -22,11 +22,7 @@ const COURSES = {
 };
 
 const TAB_COLOR = { Chem1: "#2A7F7E", Chem2: "#E0527A" };
-
-function parseNumeric(str) {
-  const m = String(str).match(/-?\d+\.?\d*(e-?\d+)?/i);
-  return m ? parseFloat(m[0]) : NaN;
-}
+const DIFFICULTIES = ["Intro", "Intermediate", "Advanced"];
 
 function TitrationHero() {
   return (
@@ -96,12 +92,11 @@ function ElementTile({ topic, accent, stats, onStart }) {
   );
 }
 
-function QuizModal({ topic, accent, onClose, onAnswered }) {
+function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedOption, setSelectedOption] = useState("");
-  const [freeAnswer, setFreeAnswer] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
@@ -110,12 +105,11 @@ function QuizModal({ topic, accent, onClose, onAnswered }) {
     setError(null);
     setSubmitted(false);
     setSelectedOption("");
-    setFreeAnswer("");
     try {
       const res = await fetch("/api/generate-question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topic.title, difficulty: "Intermediate" }),
+        body: JSON.stringify({ topic: topic.title, difficulty }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -125,21 +119,13 @@ function QuizModal({ topic, accent, onClose, onAnswered }) {
     } finally {
       setLoading(false);
     }
-  }, [topic]);
+  }, [topic, difficulty]);
 
   useEffect(() => { load(); }, [load]);
 
   const submit = () => {
     if (!question) return;
-    let correct = false;
-    if (question.type === "multiple_choice") {
-      correct = selectedOption.trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase();
-    } else if (question.type === "numeric") {
-      const g = parseNumeric(freeAnswer), t = parseNumeric(question.correctAnswer);
-      if (!isNaN(g) && !isNaN(t)) correct = Math.abs(g - t) <= Math.max(Math.abs(t) * 0.02, 0.01);
-    } else {
-      correct = freeAnswer.trim().length > 0 && String(question.correctAnswer).toLowerCase().includes(freeAnswer.trim().toLowerCase());
-    }
+    const correct = selectedOption.trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase();
     setIsCorrect(correct);
     setSubmitted(true);
     onAnswered(topic.id, correct);
@@ -159,44 +145,34 @@ function QuizModal({ topic, accent, onClose, onAnswered }) {
         {question && !loading && !error && (
           <div>
             <p style={{ marginBottom: 20, lineHeight: 1.5 }}>{question.question}</p>
-            {question.type === "multiple_choice" ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {question.options.map((opt, i) => {
-                  const isRight = submitted && opt.trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase();
-                  const isWrong = submitted && selectedOption === opt && !isRight;
-                  return (
-                    <button
-                      key={i}
-                      disabled={submitted}
-                      onClick={() => setSelectedOption(opt)}
-                      style={{
-                        textAlign: "left", padding: "10px 16px", borderRadius: 6, fontFamily: "monospace", fontSize: 14, cursor: "pointer",
-                        border: `1px solid ${isRight ? "#2A7F7E" : isWrong ? "#E0527A" : selectedOption === opt ? accent : "#1B2A3D22"}`,
-                        background: isRight ? "#2A7F7E14" : isWrong ? "#E0527A14" : selectedOption === opt ? `${accent}0d` : "white",
-                      }}
-                    >
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <input
-                disabled={submitted}
-                value={freeAnswer}
-                onChange={(e) => setFreeAnswer(e.target.value)}
-                placeholder={question.type === "numeric" ? `answer${question.unit ? " (" + question.unit + ")" : ""}` : "your answer"}
-                style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #1B2A3D22", fontFamily: "monospace", fontSize: 14 }}
-              />
-            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {question.options.map((opt, i) => {
+                const isRight = submitted && opt.trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase();
+                const isWrong = submitted && selectedOption === opt && !isRight;
+                return (
+                  <button
+                    key={i}
+                    disabled={submitted}
+                    onClick={() => setSelectedOption(opt)}
+                    style={{
+                      textAlign: "left", padding: "10px 16px", borderRadius: 6, fontFamily: "monospace", fontSize: 14, cursor: "pointer",
+                      border: `1px solid ${isRight ? "#2A7F7E" : isWrong ? "#E0527A" : selectedOption === opt ? accent : "#1B2A3D22"}`,
+                      background: isRight ? "#2A7F7E14" : isWrong ? "#E0527A14" : selectedOption === opt ? `${accent}0d` : "white",
+                    }}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
 
             {!submitted ? (
               <button
                 onClick={submit}
-                disabled={question.type === "multiple_choice" ? !selectedOption : !freeAnswer}
-                style={{ marginTop: 20, padding: "10px 20px", borderRadius: 6, fontSize: 14, color: "white", border: "none", cursor: "pointer", background: accent, opacity: (question.type === "multiple_choice" ? !selectedOption : !freeAnswer) ? 0.4 : 1 }}
+                disabled={!selectedOption}
+                style={{ marginTop: 20, padding: "10px 20px", borderRadius: 6, fontSize: 14, color: "white", border: "none", cursor: "pointer", background: accent, opacity: !selectedOption ? 0.4 : 1 }}
               >
-                Check answer
+                Submit answer
               </button>
             ) : (
               <div style={{ marginTop: 20 }}>
@@ -218,6 +194,7 @@ function QuizModal({ topic, accent, onClose, onAnswered }) {
 
 export default function Home() {
   const [activeCourse, setActiveCourse] = useState("Chem1");
+  const [difficulty, setDifficulty] = useState("Intro");
   const [openTopic, setOpenTopic] = useState(null);
   const [topicStats, setTopicStats] = useState({});
 
@@ -242,6 +219,26 @@ export default function Home() {
             <div style={{ fontSize: 12, color: "#4B5F6F" }}>{l}</div>
           </div>
         ))}
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+        <span style={{ fontFamily: "monospace", fontSize: 12, color: "#4B5F6F" }}>DIFFICULTY</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          {DIFFICULTIES.map((d) => (
+            <button
+              key={d}
+              onClick={() => setDifficulty(d)}
+              style={{
+                padding: "6px 14px", borderRadius: 999, fontSize: 13, cursor: "pointer",
+                background: difficulty === d ? "#1B2A3D" : "transparent",
+                color: difficulty === d ? "white" : "#4B5F6F",
+                border: `1px solid ${difficulty === d ? "#1B2A3D" : "#1B2A3D22"}`,
+              }}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
@@ -274,7 +271,7 @@ export default function Home() {
       </div>
 
       {openTopic && (
-        <QuizModal topic={openTopic} accent={accent} onClose={() => setOpenTopic(null)} onAnswered={handleAnswered} />
+        <QuizModal topic={openTopic} difficulty={difficulty} accent={accent} onClose={() => setOpenTopic(null)} onAnswered={handleAnswered} />
       )}
     </main>
   );
