@@ -508,6 +508,7 @@ const STUDY_GUIDES = [
   { id: "g1", title: "Chem 1 Complete Study Guide", desc: "Every Chem 1 topic condensed: worked examples, common traps, and exam checklists.", price: "$9", buyUrl: null },
   { id: "g2", title: "Chem 2 Complete Study Guide", desc: "Kinetics through nuclear — ICE tables, buffers, and electrochem made simple.", price: "$9", buyUrl: null },
   { id: "g3", title: "Final Exam Crash Sheet Pack", desc: "Two-page rapid-review sheets per topic. Print, highlight, ace it.", price: "$5", buyUrl: null },
+  { id: "g4", title: "Thermodynamics Study Guide", desc: "Enthalpy, entropy, Gibbs free energy, Hess's law, and calorimetry — worked problems and formula quick-reference.", price: "$7", buyUrl: null },
 ];
 
 export default function Home() {
