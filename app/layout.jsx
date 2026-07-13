@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Titrate — Gen Chem Practice",
-  description: "Unlimited AI-generated general chemistry practice problems.",
+  title: "AceChem — Gen Chem Practice",
+  description: "Unlimited AI-generated general chemistry practice problems with instant feedback.",
 };
 
 export const viewport = {
