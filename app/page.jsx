@@ -27,6 +27,7 @@ const COURSES = {
     { id: "acidsbases", symbol: "Ab", num: 3, title: "Acids & Bases", desc: "pH, pKa, buffers, titration curves.", skills: ["pH", "buffers", "titration"] },
     { id: "thermo", symbol: "Td", num: 4, title: "Thermodynamics", desc: "Entropy, Gibbs free energy, spontaneity.", skills: ["ΔS", "ΔG", "spontaneity"] },
     { id: "electrochem", symbol: "Ec", num: 5, title: "Electrochemistry", desc: "Redox, galvanic cells, the Nernst equation.", skills: ["redox", "E°cell", "Nernst"] },
+    { id: "nuclear", symbol: "Nc", num: 6, title: "Nuclear Chemistry", desc: "Radioactive decay, half-life, nuclear equations.", skills: ["α β γ decay", "half-life", "balancing"] },
   ],
 };
 
@@ -500,6 +501,15 @@ const TOOLS = [
   { id: "constants", icon: "π", label: "Constants" },
 ];
 
+/* ---- STUDY GUIDES FOR SALE ----
+   Replace each buyUrl with your real Gumroad / payment link.
+   Set buyUrl: null to show "Coming soon". */
+const STUDY_GUIDES = [
+  { id: "g1", title: "Chem 1 Complete Study Guide", desc: "Every Chem 1 topic condensed: worked examples, common traps, and exam checklists.", price: "$9", buyUrl: null },
+  { id: "g2", title: "Chem 2 Complete Study Guide", desc: "Kinetics through nuclear — ICE tables, buffers, and electrochem made simple.", price: "$9", buyUrl: null },
+  { id: "g3", title: "Final Exam Crash Sheet Pack", desc: "Two-page rapid-review sheets per topic. Print, highlight, ace it.", price: "$5", buyUrl: null },
+];
+
 export default function Home() {
   const [activeCourse, setActiveCourse] = useState("Intro");
   const [difficulty, setDifficulty] = useState("Intro");
@@ -591,6 +601,15 @@ export default function Home() {
             </button>
           ))}
 
+          <div style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "#4B5F6F", letterSpacing: "0.08em", margin: "22px 0 8px" }}>STORE</div>
+          <a
+            href="#guides"
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", padding: "9px 10px", borderRadius: 8, marginBottom: 4, cursor: "pointer", textDecoration: "none", color: "#4B5F6F", fontFamily: "var(--body)", fontSize: 13.5, boxSizing: "border-box" }}
+          >
+            <span style={{ fontFamily: "var(--mono)", width: 18, textAlign: "center", color: "#D9A441" }}>▤</span>
+            Study Guides
+          </a>
+
           <div style={{ marginTop: 28, paddingTop: 14, borderTop: "1px solid #1B2A3D12", fontFamily: "var(--mono)", fontSize: 10, color: "#4B5F6F", lineHeight: 1.7 }}>
             AI-generated questions.<br />Double-check anything<br />that looks off.
           </div>
@@ -662,6 +681,37 @@ export default function Home() {
               {COURSES[activeCourse].map((t) => (
                 <ElementTile key={t.id} topic={t} accent={accent} stats={topicStats[t.id]} onStart={setOpenTopic} />
               ))}
+            </div>
+
+            <div id="guides" style={{ marginTop: 52 }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 12, marginBottom: 4, color: "#4B5F6F", letterSpacing: "0.06em" }}>STUDY GUIDES</p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
+                <h2 style={{ fontFamily: "var(--display)", fontSize: 25, letterSpacing: "-0.01em" }}>Go deeper with study guides</h2>
+              </div>
+              <p style={{ fontSize: 14, color: "#4B5F6F", marginBottom: 18, maxWidth: 560 }}>
+                Practice here is free forever. If you want structured review material, these downloadable guides support the project.
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 16 }}>
+                {STUDY_GUIDES.map((g) => (
+                  <div key={g.id} style={{ borderRadius: 14, padding: 20, background: "#1B2A3D", color: "#F6F8F6", display: "flex", flexDirection: "column" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                      <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#D9A441", letterSpacing: "0.05em" }}>PDF DOWNLOAD</span>
+                      <span style={{ fontFamily: "var(--display)", fontSize: 18, color: "#F6F8F6" }}>{g.price}</span>
+                    </div>
+                    <h3 style={{ fontFamily: "var(--display)", fontSize: 16, marginBottom: 6 }}>{g.title}</h3>
+                    <p style={{ fontSize: 13.5, color: "#9FB2BE", lineHeight: 1.55, marginBottom: 16 }}>{g.desc}</p>
+                    {g.buyUrl ? (
+                      <a href={g.buyUrl} target="_blank" rel="noopener noreferrer" style={{ marginTop: "auto", alignSelf: "flex-start", fontFamily: "var(--mono)", fontSize: 12.5, padding: "8px 16px", borderRadius: 8, background: "#2A7F7E", color: "white", textDecoration: "none" }}>
+                        Get the guide →
+                      </a>
+                    ) : (
+                      <span style={{ marginTop: "auto", alignSelf: "flex-start", fontFamily: "var(--mono)", fontSize: 12.5, padding: "8px 16px", borderRadius: 8, background: "#F6F8F61a", color: "#9FB2BE" }}>
+                        Coming soon
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             <footer style={{ marginTop: 56, paddingTop: 20, borderTop: "1px solid #1B2A3D12", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
