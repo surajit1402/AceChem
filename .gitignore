@@ -1,0 +1,11 @@
+# dependencies / build output
+node_modules/
+.next/
+out/
+
+# local env — never commit the API key
+.env*.local
+
+# misc
+.DS_Store
+*.tsbuildinfo

@@ -289,17 +289,63 @@ function ConstantsSheet() {
 }
 
 /* ================= QUIZ MODAL ================= */
-function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
-  const [question, setQuestion] = useState(null);
-  const [loading, setLoading] = useState(true);
+/* Serves reviewed questions from the approved bank (static, zero API cost).
+   Live AI generation is a clearly-labeled, capped "extra practice" fallback. */
+const EXTRA_PRACTICE_SESSION_LIMIT = 10;
+
+function QuizModal({ topic, course, difficulty, accent, onClose, onAnswered, seenIds, onSeen, onResetSeen, extraUsed, onExtraUsed }) {
+  const [bank, setBank] = useState(null);
+  const [question, setQuestion] = useState(null); // {stem, choices, correctIndex, solution, source: "bank"|"live"}
+  const [phase, setPhase] = useState("loading"); // loading | question | generating | exhausted
   const [error, setError] = useState(null);
-  const [selectedOption, setSelectedOption] = useState("");
+  const [selected, setSelected] = useState(null); // choice index
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [openTool, setOpenTool] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true); setError(null); setSubmitted(false); setSelectedOption("");
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/bank/${course}/${topic.id}`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setBank(d.questions || []); })
+      .catch(() => { if (!cancelled) setBank([]); });
+    return () => { cancelled = true; };
+  }, [course, topic.id]);
+
+  const atLevel = bank ? bank.filter((q) => q.difficulty === difficulty) : [];
+
+  const showQuestion = (q, source) => {
+    setQuestion({ ...q, source });
+    setSelected(null); setSubmitted(false); setError(null); setPhase("question");
+  };
+
+  const pickFromBank = useCallback((pool) => {
+    const unseen = pool.filter((q) => !seenIds.has(q.id));
+    if (unseen.length === 0) { setQuestion(null); setPhase("exhausted"); return; }
+    const q = unseen[Math.floor(Math.random() * unseen.length)];
+    onSeen(q.id);
+    showQuestion(q, "bank");
+  }, [seenIds, onSeen]);
+
+  useEffect(() => {
+    if (bank !== null && phase === "loading") pickFromBank(atLevel);
+  }, [bank]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const nextQuestion = () => pickFromBank(atLevel);
+
+  const practiceAgain = () => {
+    onResetSeen(atLevel.map((q) => q.id));
+    const q = atLevel[Math.floor(Math.random() * atLevel.length)];
+    onSeen(q.id);
+    showQuestion(q, "bank");
+  };
+
+  const generateExtra = async () => {
+    if (extraUsed >= EXTRA_PRACTICE_SESSION_LIMIT) {
+      setError("Extra-practice limit reached for this session.");
+      return;
+    }
+    setPhase("generating"); setError(null);
     try {
       const res = await fetch("/api/generate-question", {
         method: "POST",
@@ -307,20 +353,18 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
         body: JSON.stringify({ topic: topic.title, difficulty }),
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setQuestion(data.question);
+      if (!res.ok || data.error) throw new Error(data.error || "Couldn't generate a question. Try again.");
+      onExtraUsed();
+      showQuestion(data.question, "live");
     } catch (e) {
-      setError("Couldn't generate a question. Try again.");
-    } finally {
-      setLoading(false);
+      setError(e.message);
+      setPhase("exhausted");
     }
-  }, [topic, difficulty]);
-
-  useEffect(() => { load(); }, [load]);
+  };
 
   const submit = () => {
-    if (!question) return;
-    const correct = selectedOption.trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase();
+    if (!question || selected === null) return;
+    const correct = selected === question.correctIndex;
     setIsCorrect(correct); setSubmitted(true); onAnswered(topic.id, correct);
   };
 
@@ -331,6 +375,15 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontFamily: "var(--mono)", fontSize: 12, padding: "3px 10px", borderRadius: 6, background: `${accent}12`, color: accent }}>{topic.title}</span>
             <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#D9A441" }}>{difficulty}</span>
+            {question?.source === "live" ? (
+              <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, padding: "3px 9px", borderRadius: 999, background: "#D9A44118", color: "#8a6620", border: "1px solid #D9A44155" }}>
+                ⚡ AI-generated · not expert-reviewed
+              </span>
+            ) : question?.source === "bank" ? (
+              <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, padding: "3px 9px", borderRadius: 999, background: "#2A7F7E12", color: "#2A7F7E", border: "1px solid #2A7F7E44" }}>
+                ✓ expert-reviewed
+              </span>
+            ) : null}
           </div>
           <button onClick={onClose} style={{ fontFamily: "var(--mono)", fontSize: 14, color: "#4B5F6F", background: "none", border: "none", cursor: "pointer" }}>✕</button>
         </div>
@@ -348,38 +401,67 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
           ))}
         </div>
 
-        {loading && (
+        {(phase === "loading" || phase === "generating") && (
           <div style={{ textAlign: "center", padding: "48px 0" }}>
             <svg width="42" height="52" viewBox="0 0 120 150" style={{ marginBottom: 10 }}>
               <circle className="drop" cx="60" cy="34" r="5" fill="#D9A441" />
               <path d="M40 60 L48 100 L38 140 L82 140 L72 100 L80 60 Z" fill="none" stroke="#1B2A3D44" strokeWidth="3" />
             </svg>
-            <p style={{ fontFamily: "var(--mono)", fontSize: 13, color: accent }}>generating problem…</p>
-          </div>
-        )}
-        {error && (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <p style={{ fontSize: 14, color: "#E0527A", marginBottom: 12 }}>{error}</p>
-            <button onClick={load} style={{ fontFamily: "var(--mono)", fontSize: 13, color: "#2A7F7E", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>retry</button>
+            <p style={{ fontFamily: "var(--mono)", fontSize: 13, color: accent }}>
+              {phase === "generating" ? "generating extra practice…" : "loading question…"}
+            </p>
           </div>
         )}
 
-        {question && !loading && !error && (
+        {phase === "exhausted" && (
+          <div style={{ textAlign: "center", padding: "36px 0" }}>
+            {error && <p style={{ fontSize: 14, color: "#E0527A", marginBottom: 14 }}>{error}</p>}
+            {atLevel.length > 0 ? (
+              <p style={{ fontSize: 15, marginBottom: 6 }}>
+                🎉 You've worked through all {atLevel.length} reviewed question{atLevel.length === 1 ? "" : "s"} here.
+              </p>
+            ) : (
+              <p style={{ fontSize: 15, marginBottom: 6 }}>No reviewed questions for this topic &amp; difficulty yet.</p>
+            )}
+            <p style={{ fontSize: 13, color: "#4B5F6F", marginBottom: 20 }}>
+              {atLevel.length > 0 ? "Practice them again, or generate something new." : "You can still generate practice with AI."}
+            </p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              {atLevel.length > 0 && (
+                <button onClick={practiceAgain} style={{ padding: "12px 24px", borderRadius: 8, fontSize: 14, fontFamily: "var(--display)", color: "white", border: "none", cursor: "pointer", background: accent }}>
+                  ↺ Practice again
+                </button>
+              )}
+              <button
+                onClick={generateExtra}
+                disabled={extraUsed >= EXTRA_PRACTICE_SESSION_LIMIT}
+                style={{ padding: "12px 24px", borderRadius: 8, fontSize: 14, fontFamily: "var(--display)", color: "#1B2A3D", border: "1px solid #D9A441", cursor: "pointer", background: "#D9A44122", opacity: extraUsed >= EXTRA_PRACTICE_SESSION_LIMIT ? 0.5 : 1 }}
+              >
+                ⚡ Generate extra practice
+              </button>
+            </div>
+            <p style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "#4B5F6F", marginTop: 12 }}>
+              extra practice is AI-generated, not expert-reviewed · {Math.max(EXTRA_PRACTICE_SESSION_LIMIT - extraUsed, 0)} left this session
+            </p>
+          </div>
+        )}
+
+        {phase === "question" && question && (
           <div>
-            <p style={{ marginBottom: 20, lineHeight: 1.6, fontSize: 15 }}>{question.question}</p>
+            <p style={{ marginBottom: 20, lineHeight: 1.6, fontSize: 15 }}>{question.stem}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {question.options.map((opt, i) => {
-                const isRight = submitted && opt.trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase();
-                const isWrong = submitted && selectedOption === opt && !isRight;
+              {question.choices.map((opt, i) => {
+                const isRight = submitted && i === question.correctIndex;
+                const isWrong = submitted && selected === i && !isRight;
                 return (
                   <button
                     key={i}
                     disabled={submitted}
-                    onClick={() => setSelectedOption(opt)}
+                    onClick={() => setSelected(i)}
                     style={{
                       textAlign: "left", padding: "12px 16px", borderRadius: 8, fontFamily: "var(--mono)", fontSize: 14, cursor: submitted ? "default" : "pointer", transition: "all 0.15s",
-                      border: `1.5px solid ${isRight ? "#2A7F7E" : isWrong ? "#E0527A" : selectedOption === opt ? accent : "#1B2A3D1c"}`,
-                      background: isRight ? "#2A7F7E12" : isWrong ? "#E0527A12" : selectedOption === opt ? `${accent}0d` : "white",
+                      border: `1.5px solid ${isRight ? "#2A7F7E" : isWrong ? "#E0527A" : selected === i ? accent : "#1B2A3D1c"}`,
+                      background: isRight ? "#2A7F7E12" : isWrong ? "#E0527A12" : selected === i ? `${accent}0d` : "white",
                     }}
                   >
                     <span style={{ color: "#4B5F6F", marginRight: 10 }}>{String.fromCharCode(65 + i)}.</span>{opt}
@@ -393,8 +475,8 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
             {!submitted ? (
               <button
                 onClick={submit}
-                disabled={!selectedOption}
-                style={{ marginTop: 22, padding: "12px 26px", borderRadius: 8, fontSize: 14, fontFamily: "var(--display)", color: "white", border: "none", cursor: "pointer", background: accent, opacity: !selectedOption ? 0.4 : 1 }}
+                disabled={selected === null}
+                style={{ marginTop: 22, padding: "12px 26px", borderRadius: 8, fontSize: 14, fontFamily: "var(--display)", color: "white", border: "none", cursor: "pointer", background: accent, opacity: selected === null ? 0.4 : 1 }}
               >
                 Submit answer
               </button>
@@ -405,11 +487,12 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
                 </p>
                 {!isCorrect && (
                   <p style={{ fontSize: 14, marginBottom: 8 }}>
-                    Correct answer: <span style={{ fontFamily: "var(--mono)", color: "#2A7F7E" }}>{question.correctAnswer}</span>
+                    Correct answer: <span style={{ fontFamily: "var(--mono)", color: "#2A7F7E" }}>{String.fromCharCode(65 + question.correctIndex)}. {question.choices[question.correctIndex]}</span>
                   </p>
                 )}
-                <p style={{ fontSize: 14, lineHeight: 1.6, color: "#4B5F6F" }}>{question.explanation}</p>
-                <button onClick={load} style={{ marginTop: 18, padding: "12px 26px", borderRadius: 8, fontSize: 14, fontFamily: "var(--display)", color: "#F6F8F6", background: "#1B2A3D", border: "none", cursor: "pointer" }}>
+                <p style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#2A7F7E", letterSpacing: "0.06em", marginBottom: 6 }}>WORKED SOLUTION</p>
+                <p style={{ fontSize: 14, lineHeight: 1.65, color: "#4B5F6F", whiteSpace: "pre-wrap" }}>{question.solution}</p>
+                <button onClick={nextQuestion} style={{ marginTop: 18, padding: "12px 26px", borderRadius: 8, fontSize: 14, fontFamily: "var(--display)", color: "#F6F8F6", background: "#1B2A3D", border: "none", cursor: "pointer" }}>
                   Next question →
                 </button>
               </div>
@@ -459,7 +542,7 @@ function TitrationHero() {
             Master chemistry,<br />one reaction at a time.
           </h1>
           <p style={{ fontSize: 14.5, maxWidth: 440, color: "#9FB2BE", lineHeight: 1.5 }}>
-            Endless practice questions across three courses, a periodic table, calculator, formula sheet, and constants — all in one place.
+            Expert-reviewed practice questions across three courses, a periodic table, calculator, formula sheet, and constants — all in one place.
           </p>
         </div>
         <svg width="110" height="140" viewBox="0 0 120 150" aria-hidden="true" style={{ flexShrink: 0 }}>
@@ -550,6 +633,24 @@ export default function Home() {
   const [openTool, setOpenTool] = useState(null);
   const [topicStats, setTopicStats] = useState({});
   const [session, setSession] = useState({ score: 0, answered: 0, streak: 0 });
+  const [seenIds, setSeenIds] = useState(() => new Set()); // bank questions already shown this session
+  const [extraUsed, setExtraUsed] = useState(0); // live "extra practice" generations this session
+
+  const markSeen = useCallback((id) => {
+    setSeenIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  const resetSeen = useCallback((ids) => {
+    setSeenIds((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+  }, []);
 
   const handleAnswered = (topicId, correct) => {
     setTopicStats((prev) => {
@@ -730,7 +831,7 @@ export default function Home() {
             <footer style={{ marginTop: 56, paddingTop: 20, borderTop: "1px solid #1B2A3D12", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <Logo size={22} />
               <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "#4B5F6F" }}>
-                AceChem · unlimited AI-generated chemistry practice · questions are generated fresh — double-check anything that looks off
+                AceChem · expert-reviewed chemistry practice · optional extra practice is AI-generated and labeled
               </span>
             </footer>
           </main>
@@ -739,7 +840,19 @@ export default function Home() {
 
       {/* ---------- MODALS ---------- */}
       {openTopic && (
-        <QuizModal topic={openTopic} difficulty={difficulty} accent={accent} onClose={() => setOpenTopic(null)} onAnswered={handleAnswered} />
+        <QuizModal
+          topic={openTopic}
+          course={activeCourse.toLowerCase()}
+          difficulty={difficulty}
+          accent={accent}
+          onClose={() => setOpenTopic(null)}
+          onAnswered={handleAnswered}
+          seenIds={seenIds}
+          onSeen={markSeen}
+          onResetSeen={resetSeen}
+          extraUsed={extraUsed}
+          onExtraUsed={() => setExtraUsed((n) => n + 1)}
+        />
       )}
       {openTool === "ptable" && (
         <ToolModal title="Periodic Table of the Elements" onClose={() => setOpenTool(null)} wide>
