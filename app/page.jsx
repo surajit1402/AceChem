@@ -296,6 +296,7 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
   const [selectedOption, setSelectedOption] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [openTool, setOpenTool] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true); setError(null); setSubmitted(false); setSelectedOption("");
@@ -326,12 +327,25 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "#1B2A3Dd9", backdropFilter: "blur(3px)" }} onClick={onClose}>
       <div style={{ width: "100%", maxWidth: 540, borderRadius: 16, background: "white", padding: 26, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 24px 60px -12px #00000066" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontFamily: "var(--mono)", fontSize: 12, padding: "3px 10px", borderRadius: 6, background: `${accent}12`, color: accent }}>{topic.title}</span>
             <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#D9A441" }}>{difficulty}</span>
           </div>
           <button onClick={onClose} style={{ fontFamily: "var(--mono)", fontSize: 14, color: "#4B5F6F", background: "none", border: "none", cursor: "pointer" }}>✕</button>
+        </div>
+
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1B2A3D14" }}>
+          {TOOLS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setOpenTool(t.id)}
+              title={t.label}
+              style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 11.5, padding: "6px 11px", borderRadius: 999, border: "1px solid #1B2A3D22", background: "#F6F8F6", color: "#1B2A3D", cursor: "pointer" }}
+            >
+              <span style={{ color: "#2A7F7E" }}>{t.icon}</span> {t.label}
+            </button>
+          ))}
         </div>
 
         {loading && (
@@ -403,6 +417,31 @@ function QuizModal({ topic, difficulty, accent, onClose, onAnswered }) {
           </div>
         )}
       </div>
+
+      {openTool && (
+        <div onClick={(e) => e.stopPropagation()}>
+          {openTool === "ptable" && (
+            <ToolModal title="Periodic Table of the Elements" onClose={() => setOpenTool(null)} wide>
+              <PeriodicTable />
+            </ToolModal>
+          )}
+          {openTool === "calc" && (
+            <ToolModal title="Scientific Calculator" onClose={() => setOpenTool(null)}>
+              <Calculator />
+            </ToolModal>
+          )}
+          {openTool === "formulas" && (
+            <ToolModal title="Formula Sheet" onClose={() => setOpenTool(null)} wide>
+              <FormulaSheet />
+            </ToolModal>
+          )}
+          {openTool === "constants" && (
+            <ToolModal title="Useful Constants & Conversions" onClose={() => setOpenTool(null)}>
+              <ConstantsSheet />
+            </ToolModal>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -433,22 +472,6 @@ function TitrationHero() {
           <circle className="bubble b3" cx="58" cy="124" r="1.6" fill="#F6F8F644" />
         </svg>
       </div>
-    </div>
-  );
-}
-
-function SessionBar({ score, answered, streak }) {
-  const pct = answered ? Math.round((score / answered) * 100) : 0;
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 18, borderRadius: 12, background: "#1B2A3D", color: "#F6F8F6", padding: "13px 20px", marginBottom: 26, flexWrap: "wrap" }}>
-      <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "#9FB2BE", letterSpacing: "0.06em" }}>THIS SESSION</span>
-      <span style={{ fontFamily: "var(--display)", fontSize: 15 }}>{score}<span style={{ color: "#9FB2BE" }}>/{answered} correct</span></span>
-      <div style={{ flex: 1, minWidth: 120, height: 6, borderRadius: 999, background: "#F6F8F622", overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 999, background: pct >= 70 ? "#2A7F7E" : "#D9A441", transition: "width 0.4s" }} />
-      </div>
-      <span style={{ fontFamily: "var(--mono)", fontSize: 13, color: streak >= 3 ? "#E0527A" : "#9FB2BE" }}>
-        {streak >= 3 ? "🔥 " : ""}streak {streak}
-      </span>
     </div>
   );
 }
@@ -642,7 +665,6 @@ export default function Home() {
 
           <main style={{ maxWidth: 900, margin: "0 auto", padding: "26px 20px 60px", color: "#1B2A3D" }}>
             <TitrationHero />
-            <SessionBar score={session.score} answered={session.answered} streak={session.streak} />
 
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
               <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "#4B5F6F", letterSpacing: "0.06em" }}>DIFFICULTY</span>
