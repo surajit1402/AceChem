@@ -642,10 +642,6 @@ export default function Home() {
             <span style={{ fontFamily: "var(--mono)", width: 18, textAlign: "center", color: "#D9A441" }}>▤</span>
             Study Guides
           </a>
-
-          <div style={{ marginTop: 28, paddingTop: 14, borderTop: "1px solid #1B2A3D12", fontFamily: "var(--mono)", fontSize: 10, color: "#4B5F6F", lineHeight: 1.7 }}>
-            AI-generated questions.<br />Double-check anything<br />that looks off.
-          </div>
         </aside>
 
         {/* ---------- MAIN ---------- */}
